@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teberah Prophetic Center Calculator</title>
+
+    <style>
+        :root {
+            --primary: #4B2E83;
+            --secondary: #7E57C2;
+            --background: #F5F2FA;
+            --accent: #201909;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        p {
+            text-align: center;
+            color: #555;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        button:hover {
+            background: var(--secondary);
+        }
+
+        .results {
+            margin-top: 25px;
+            display: none;
+        }
+
+        .result-box {
+            background: #f3effa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        #downloadBtn {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Teberah Prophetic Center</h1>
+    <p>Church Income Distribution Calculator</p>
+
+    <label for="profit">Enter Total Income (₦)</label>
+    <input type="text" id="profit" placeholder="e.g. ₦127,400">
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div class="results" id="results">
+        <div class="result-box">
+            <span>Church Account (50%)</span>
+            <span class="highlight" id="church">₦0.00</span>
+        </div>
+
+        <div class="result-box">
+            <span>Lead Pastor (20%)</span>
+            <span class="highlight" id="pastor">₦0.00</span>
+        </div>
+
+        <div class="result-box">
+            <span>Expenses (30%)</span>
+            <span class="highlight" id="expenses">₦0.00</span>
+        </div>
+    </div>
+
+    <button id="downloadBtn">Download PDF</button>
+</div>
+
+<!-- jsPDF CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+    const profitInput = document.getElementById("profit");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    profitInput.addEventListener("input", function (e) {
+        let value = e.target.value;
+
+        value = value.replace(/[^0-9]/g, "");
+
+        if (value === "") {
+            e.target.value = "";
+            return;
+        }
+
+        let formatted = Number(value).toLocaleString("en-NG");
+        e.target.value = "₦" + formatted;
+    });
+
+    function getRawNumber(value) {
+        return Number(value.replace(/[^0-9]/g, ""));
+    }
+
+    function formatCurrency(num) {
+        return Number(num).toLocaleString('en-NG', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function calculate() {
+        let rawValue = profitInput.value;
+        let income = getRawNumber(rawValue);
+
+        if (!income || income <= 0) {
+            alert("Please enter a valid amount");
+            return;
+        }
+
+        let church = income * 0.50;
+        let pastor = income * 0.20;
+        let expenses = income * 0.30;
+
+        document.getElementById("church").innerText = "₦" + formatCurrency(church);
+        document.getElementById("pastor").innerText = "₦" + formatCurrency(pastor);
+        document.getElementById("expenses").innerText = "₦" + formatCurrency(expenses);
+
+        document.getElementById("results").style.display = "block";
+        downloadBtn.style.display = "block";
+
+        downloadBtn.onclick = function () {
+            generatePDF(income, church, pastor, expenses);
+        };
+    }
+
+    function generatePDF(income, church, pastor, expenses) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("Teberah Prophetic Center", 20, 20);
+
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+
+        doc.text("Income Distribution Report", 20, 30);
+
+        doc.text("Total Income: NGN " + formatCurrency(income), 20, 45);
+        doc.text("Church Account (50%): NGN " + formatCurrency(church), 20, 55);
+        doc.text("Lead Pastor (20%): NGN " + formatCurrency(pastor), 20, 65);
+        doc.text("Expenses (30%): NGN " + formatCurrency(expenses), 20, 75);
+
+        doc.text("Generated on: " + new Date().toLocaleString(), 20, 90);
+
+       let now = new Date();
+
+        // Format: 19-Apr-2026
+        let day = String(now.getDate()).padStart(2, '0');
+            
+        let monthNames = ["Jan","Feb","Mar","Apr","May","Jun",
+                          "Jul","Aug","Sep","Oct","Nov","Dec"];
+            
+        let month = monthNames[now.getMonth()];
+        let year = now.getFullYear();
+            
+        let formattedDate = `${day}-${month}-${year}`;
+            
+        doc.save(`Teberah_Report_${formattedDate}.pdf`);
+    }
+</script>
+
+</body>
+</html>
